@@ -8,10 +8,13 @@
 ## Version: v5.00
 ## Grid Author: Pastamancer & Maia
 ## Dependencies: Grid
-## OptionalDeps: LibBabble-Zone-3.0, LibBabble-Boss-3.0
+## OptionalDeps: LibBabble-Zone-3.0, LibBabble-Boss-3.0, AceLocale-3.0
 ## X-Category: UnitFrame
 ## X-GridStatusModule: GridStatusRaidDebuff
 
+#@no-lib-strip@
 embeds.xml
+#@end-no-lib-strip@
+
 Core.lua
 
