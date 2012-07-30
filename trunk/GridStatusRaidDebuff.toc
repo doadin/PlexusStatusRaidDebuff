@@ -16,5 +16,7 @@
 embeds.xml
 #@end-no-lib-strip@
 
+Locale\Locale.xml
+
 Core.lua
 
