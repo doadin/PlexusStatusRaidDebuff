@@ -168,7 +168,22 @@ function GridStatusRaidDebuff:CheckDetectZone()
 end
 
 function GridStatusRaidDebuff:ZoneCheck()
-	realzone, zonetype = GetInstanceInfo()
+	-- localzone and realzone should be the same, but sometimes they are not
+	-- For example, in German Throne of Thunders
+	-- localzone = "Der Thron des Donners"
+	-- realzone = "Thron des Donners"
+	local instzone
+	local mapid = GetCurrentMapAreaID()
+	local localzone = GetMapNameByID(mapid)
+
+	instzone, zonetype = GetInstanceInfo()
+
+	-- Preference is for localzone, but fall back to instzone if it is all that exists
+	if debuff_list[instzone] and not debuff_list[localzone] then
+		realzone = instzone
+	else
+		realzone = localzone
+	end
 
 	self:UpdateAllUnit()
 	self:CheckDetectZone()
