@@ -502,7 +502,15 @@ function GridStatusRaidDebuff:LoadZoneDebuff(zone, name)
 	local description, menuName, icon, data, k
 	local args = self.options.args[zone].args
 
+	-- Code by Mikk
 	k = debuff_list[zone][name]
+	local order = k.order
+	-- Make it sorted by name. Values become 9999.0 -- 9999.99999999
+	if order==9999 then
+		local a,b,c = string.byte(name, 1, 3)
+		order=9999 + ((a or 0)*65536 + (b or 0)*256 + (c or 0)) / 16777216
+	end
+	-- End of code by Mikk
 
 	if not args[name] then
 		description = L["Enable %s"]:format(name)
@@ -518,7 +526,7 @@ function GridStatusRaidDebuff:LoadZoneDebuff(zone, name)
 			type = "group",
 			name = menuName,
 			desc = description,
-			order = k.order,
+			order = order,
 			args = {
 				["enable"] = {
 					type = "toggle",
