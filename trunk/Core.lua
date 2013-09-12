@@ -185,6 +185,11 @@ function GridStatusRaidDebuff:ZoneCheck()
 		realzone = localzone
 	end
 
+	-- If loading the game in Proving Grounds this seems to be the case
+	if not realzone then
+		return
+	end
+
 	self:UpdateAllUnit()
 	self:CheckDetectZone()
 
