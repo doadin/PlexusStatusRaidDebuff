@@ -63,7 +63,6 @@ local dispelMap = {
 -- Spells to ignore detecting
 local ignore_ids = {
 	[1604] = true, -- Dazed
-	[6307] = true, -- Blood Pact
 }
 
 local clientVersion
