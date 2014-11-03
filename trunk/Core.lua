@@ -76,7 +76,7 @@ end
 --	Core
 ---------------------------------------------------------
 
-GridStatusRaidDebuff = Grid:GetModule("GridStatus"):NewModule("GridStatusRaidDebuff", "AceTimer-3.0")
+GridStatusRaidDebuff = Grid:NewStatusModule("GridStatusRaidDebuff", "AceTimer-3.0")
 GridStatusRaidDebuff.menuName = L["Raid Debuff"]
 
 local GridFrame = Grid:GetModule("GridFrame")
@@ -170,11 +170,18 @@ function GridStatusRaidDebuff:ZoneCheck()
 	-- localzone and realzone should be the same, but sometimes they are not
 	-- For example, in German Throne of Thunders
 	-- localzone = "Der Thron des Donners"
-	-- realzone = "Thron des Donners"
+	-- instzone = "Thron des Donners"
 	local instzone
+
+	-- The mapid returned by UnitPosition is not the same used by GetMapNameByID
+	-- local mapid = select(4, UnitPosition("player"))
+
+	-- Force map to right zone
+	SetMapToCurrentZone()
 	local mapid = GetCurrentMapAreaID()
 	local localzone = GetMapNameByID(mapid)
 
+	-- zonetype is a module variable
 	instzone, zonetype = GetInstanceInfo()
 
 	-- Preference is for localzone, but fall back to instzone if it is all that exists
@@ -750,8 +757,12 @@ function GridStatusRaidDebuff:CreateZoneMenu(zone)
 					usage = "SpellID",
 					set = function(_, v)
 						local name = GetSpellInfo(v)
+						-- self:Debug("Import", zone, name, v)
 						if name then						  
         						self:DebuffLocale(zone, name, v, 5, 5, true, true)
+							if not self.db.profile.detected_debuff[zone] then
+								self.db.profile.detected_debuff[zone] = {}
+							end
 							if not self.db.profile.detected_debuff[zone][name] then 
 								self.db.profile.detected_debuff[zone][name] = v
 								self:LoadZoneDebuff(zone, name)
