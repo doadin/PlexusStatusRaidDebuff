@@ -61,8 +61,10 @@ local dispelMap = {
 }
 
 -- Spells to ignore detecting
+-- Bug is causing Exhaustion to show up for some people in Blackrock Foundry (Ticket #6)
 local ignore_ids = {
 	[1604] = true, -- Dazed
+	[57723] = true, -- Exhaustion
 }
 
 local clientVersion
@@ -261,7 +263,7 @@ function GridStatusRaidDebuff:ScanNewDebuff(e, ts, event, hideCaster, srcguid, s
 	if not name then return end
 	local settings = self.db.profile["alert_RaidDebuff"]
 	if (settings.enable and debuff_list[realzone]) then
-		if event == "SPELL_AURA_APPLIED" and srcguid and not GridRoster:IsGUIDInRaid(srcguid) and GridRoster:IsGUIDInRaid(dstguid)
+		if event == "SPELL_AURA_APPLIED" and srcguid and not GridRoster:IsGUIDInGroup(srcguid) and GridRoster:IsGUIDInGroup(dstguid)
 			and not debuff_list[realzone][name] then
 			if ignore_ids[spellId] then return end --Ignore Dazed
 
@@ -291,7 +293,7 @@ end
 
 function GridStatusRaidDebuff:ScanUnit(unitid, unitGuid)
 	local guid = unitGuid or UnitGUID(unitid)
-	--if not GridRoster:IsGUIDInRaid(guid) then	return end
+	--if not GridRoster:IsGUIDInGroup(guid) then	return end
 
 	local name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable
 	local settings = self.db.profile["alert_RaidDebuff"]
