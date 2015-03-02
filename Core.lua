@@ -198,7 +198,7 @@ function GridStatusRaidDebuff:ZoneCheck()
 		return
 	end
 
-	self:UpdateAllUnit()
+	self:UpdateAllUnits()
 	self:CheckDetectZone()
 
 	if myClass == "PALADIN" or myClass == "DRUID" or myClass == "SHAMAN" or myClass == "PRIEST" or
@@ -208,7 +208,7 @@ function GridStatusRaidDebuff:ZoneCheck()
 
 	if debuff_list[realzone] then
 		if not refreshEventScheduled then
-			refreshTimer = self:ScheduleRepeatingTimer("UpdateAllUnit", self.db.profile.frequency)
+			refreshTimer = self:ScheduleRepeatingTimer("UpdateAllUnits", self.db.profile.frequency)
 			self:RegisterMessage("Grid_UnitJoined")
 			refreshEventScheduled = true
 		end
@@ -223,7 +223,7 @@ end
 
 function GridStatusRaidDebuff:UpdateRefresh()
 	self:CancelTimer(refreshTimer)
-	refreshTimer = self:ScheduleRepeatingTimer("UpdateAllUnit", self.db.profile.frequency)
+	refreshTimer = self:ScheduleRepeatingTimer("UpdateAllUnits", self.db.profile.frequency)
 end
 
 function GridStatusRaidDebuff:RegisterStatuses()
@@ -253,7 +253,7 @@ function GridStatusRaidDebuff:PLAYER_TALENT_UPDATE()
 	end
 end
 
-function GridStatusRaidDebuff:UpdateAllUnit()
+function GridStatusRaidDebuff:UpdateAllUnits()
 	for guid, unitid in GridRoster:IterateRoster() do
 		self:ScanUnit(unitid, guid)
 	end
@@ -567,7 +567,7 @@ function GridStatusRaidDebuff:LoadZoneDebuff(zone, name)
 					set = function(_, v)
 									insertDb(zone,name,"disable",not v)
 									k.disable = not v
-									self:UpdateAllUnit()
+									self:UpdateAllUnits()
 								end,
 				},
 				["icon priority"] = {
@@ -584,7 +584,7 @@ function GridStatusRaidDebuff:LoadZoneDebuff(zone, name)
 					set = function(_, v)
 									insertDb(zone,name,"i_prior",v)
 									k.i_prior = v
-									self:UpdateAllUnit()
+									self:UpdateAllUnits()
 								end,
 				},
 				["color priority"] = {
@@ -601,7 +601,7 @@ function GridStatusRaidDebuff:LoadZoneDebuff(zone, name)
 					set = function(_, v)
 									insertDb(zone,name,"c_prior",v)
 									k.c_prior = v
-									self:UpdateAllUnit()
+									self:UpdateAllUnits()
 								end,
 				},
 				["Remained time"] = {
@@ -615,7 +615,7 @@ function GridStatusRaidDebuff:LoadZoneDebuff(zone, name)
 					set = function(_, v)
 									insertDb(zone,name,"timer",v)
 									k.timer = v
-									self:UpdateAllUnit()
+									self:UpdateAllUnits()
 								end,
 				},
 				["Stackable debuff"] = {
@@ -629,7 +629,7 @@ function GridStatusRaidDebuff:LoadZoneDebuff(zone, name)
 					set = function(_, v)
 									insertDb(zone,name,"stackable",v)
 									k.stackable = v
-									self:UpdateAllUnit()
+									self:UpdateAllUnits()
 								end,
 				},
 				["only color"] = {
@@ -643,7 +643,7 @@ function GridStatusRaidDebuff:LoadZoneDebuff(zone, name)
 					set = function(_, v)
 									insertDb(zone,name,"noicon",v)
 									k.noicon = v
-									self:UpdateAllUnit()
+									self:UpdateAllUnits()
 								end,
 				},
 				["custom color"] = {
@@ -661,7 +661,7 @@ function GridStatusRaidDebuff:LoadZoneDebuff(zone, name)
 										insertDb(zone,name,"color", {r = 0, g = 0, b = 0})
 										k.color = {r = 0, g = 0, b = 0}
 									end
-									self:UpdateAllUnit()
+									self:UpdateAllUnits()
 								end,
 				},
 				["color"] = {
@@ -681,7 +681,7 @@ function GridStatusRaidDebuff:LoadZoneDebuff(zone, name)
 									local t = {r = ir, g = ig, b = ib}
 									insertDb(zone,name,"color",t)
 								  k.color = t
-								  self:UpdateAllUnit()
+								  self:UpdateAllUnits()
 							  end,
 				},
 				["remove"] = {
@@ -694,7 +694,7 @@ function GridStatusRaidDebuff:LoadZoneDebuff(zone, name)
 									self.db.profile.detected_debuff[zone][name] = nil
 									debuff_list[zone][name] = nil
 									args[name] = nil
-									self:UpdateAllUnit()
+									self:UpdateAllUnits()
 								end,
 				},
 				["link"] = {
@@ -746,7 +746,7 @@ function GridStatusRaidDebuff:CreateZoneMenu(zone)
 											self.db.profile.detected_debuff[zone][name] = nil
 											debuff_list[zone][name] = nil
 											args[zone].args[name] = nil
-											self:UpdateAllUnit()
+											self:UpdateAllUnits()
 										end
 									end
 					end,
@@ -768,7 +768,7 @@ function GridStatusRaidDebuff:CreateZoneMenu(zone)
 							if not self.db.profile.detected_debuff[zone][name] then 
 								self.db.profile.detected_debuff[zone][name] = v
 								self:LoadZoneDebuff(zone, name)
-								self:UpdateAllUnit() 
+								self:UpdateAllUnits() 
 							end
 						end
 					end,
@@ -819,7 +819,7 @@ function GridStatusRaidDebuff:CreateMainMenu()
 		get = function() return self.db.profile.ignDis end,
 		set = function(_, v)
 						self.db.profile.ignDis = v
-						self:UpdateAllUnit()
+						self:UpdateAllUnits()
 					end,
 
 	}
@@ -831,7 +831,7 @@ function GridStatusRaidDebuff:CreateMainMenu()
 		get = function() return self.db.profile.ignUndis end,
 		set = function(_, v)
 						self.db.profile.ignUndis = v
-						self:UpdateAllUnit()
+						self:UpdateAllUnits()
 					end,
 	}
 	args["Frequency"] = {
