@@ -61,10 +61,8 @@ local dispelMap = {
 }
 
 -- Spells to ignore detecting
--- Bug is causing Exhaustion to show up for some people in Blackrock Foundry (Ticket #6)
 local ignore_ids = {
 	[1604] = true, -- Dazed
-	[57723] = true, -- Exhaustion
 }
 
 local clientVersion
@@ -295,7 +293,7 @@ function GridStatusRaidDebuff:ScanUnit(unitid, unitGuid)
 	local guid = unitGuid or UnitGUID(unitid)
 	--if not GridRoster:IsGUIDInGroup(guid) then	return end
 
-	local name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable
+	local name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable, shouldConsolidate, spellId, canApplyAura, isBossDebuff, isCastByPlayer
 	local settings = self.db.profile["alert_RaidDebuff"]
 
 	if (settings.enable and debuff_list[realzone]) then
@@ -310,7 +308,7 @@ function GridStatusRaidDebuff:ScanUnit(unitid, unitGuid)
 		local index = 0
 		while true do
 			index = index + 1
-			name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable = UnitAura(unitid, index, "HARMFUL")
+			name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable, shouldConsolidate, spellId, canApplyAura, isBuffDebuff, isCastByPlayer = UnitAura(unitid, index, "HARMFUL")
 
 			if not name then
 				break
@@ -322,6 +320,26 @@ function GridStatusRaidDebuff:ScanUnit(unitid, unitGuid)
 				if not data.disable and
 				   not (self.db.profile.ignDis and myDispellable[debuffType]) and
 				   not (self.db.profile.ignUndis and debuffType and not myDispellable[debuffType]) then
+
+					-- Debug
+					-- Need to handle case where debuff from a player and in the raid have the same name
+					-- The debuff from players should not be displayed
+					-- Example: Ticket #6: Exhaustion from Blackrock Foundry
+					if isCastByPlayer then
+						-- self:Debug("!!!! Debuff cast by a player", name)
+						break
+					-- caster includes stuff we want like "bossN" and "target"
+					-- elseif caster then
+					-- Should probably leave this out until there is an example pet spell that this
+					-- is needed for
+					-- else
+					-- 	caster_strstart = string.sub(caster, 1, 7)
+					-- 	if caster_strstart == "partype" or caster_strstart == "raidpet" then
+					-- 	 	local caster_name = GetUnitName(caster, true)
+					-- 		self:Debug("!!!! Debuff cast by pet", caster_name, name)
+					-- 		break
+					-- 	end
+					end
 
 					if di_prior < data.i_prior then
 						di_prior = data.i_prior
