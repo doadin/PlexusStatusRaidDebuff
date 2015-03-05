@@ -310,6 +310,7 @@ function GridStatusRaidDebuff:ScanUnit(unitid, unitGuid)
 			index = index + 1
 			name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable, shouldConsolidate, spellId, canApplyAura, isBuffDebuff, isCastByPlayer = UnitAura(unitid, index, "HARMFUL")
 
+			-- Check for end of loop
 			if not name then
 				break
 			end
@@ -317,29 +318,25 @@ function GridStatusRaidDebuff:ScanUnit(unitid, unitGuid)
 			if debuff_list[realzone][name] then
 				data = debuff_list[realzone][name]
 
+				-- Should probably leave this out until there is an example pet spell that this
+				-- is needed for
+				-- isCastByPet = nil
+				-- if
+				-- 	caster_strstart = string.sub(caster, 1, 7)
+				-- 	if caster_strstart == "partype" or caster_strstart == "raidpet" then
+				-- 	 	local caster_name = GetUnitName(caster, true)
+				-- 		self:Debug("!!!! Debuff cast by pet", caster_name, name)
+				--		isCastByPet = true
+				-- 	end
+				-- end
+
+				-- isCastByPlayer is necessary for when a debuff from a player and a zone debuff have the same name
+				-- The debuff from players should not be displayed
+				-- Example: Ticket #6: Exhaustion from Blackrock Foundry
 				if not data.disable and
+				   not isCastByPlayer and 
 				   not (self.db.profile.ignDis and myDispellable[debuffType]) and
 				   not (self.db.profile.ignUndis and debuffType and not myDispellable[debuffType]) then
-
-					-- Debug
-					-- Need to handle case where debuff from a player and in the raid have the same name
-					-- The debuff from players should not be displayed
-					-- Example: Ticket #6: Exhaustion from Blackrock Foundry
-					if isCastByPlayer then
-						-- self:Debug("!!!! Debuff cast by a player", name)
-						break
-					-- caster includes stuff we want like "bossN" and "target"
-					-- elseif caster then
-					-- Should probably leave this out until there is an example pet spell that this
-					-- is needed for
-					-- else
-					-- 	caster_strstart = string.sub(caster, 1, 7)
-					-- 	if caster_strstart == "partype" or caster_strstart == "raidpet" then
-					-- 	 	local caster_name = GetUnitName(caster, true)
-					-- 		self:Debug("!!!! Debuff cast by pet", caster_name, name)
-					-- 		break
-					-- 	end
-					end
 
 					if di_prior < data.i_prior then
 						di_prior = data.i_prior
