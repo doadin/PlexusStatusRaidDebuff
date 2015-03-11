@@ -61,8 +61,11 @@ local dispelMap = {
 }
 
 -- Spells to ignore detecting
+-- Bug is causing Exhaustion to show up for some people in Blackrock Foundry (Ticket #6)
 local ignore_ids = {
 	[1604] = true, -- Dazed
+	[6788] = true, -- Weakened Soul
+	[57723] = true, -- Exhaustion
 }
 
 local clientVersion
@@ -293,7 +296,7 @@ function GridStatusRaidDebuff:ScanUnit(unitid, unitGuid)
 	local guid = unitGuid or UnitGUID(unitid)
 	--if not GridRoster:IsGUIDInGroup(guid) then	return end
 
-	local name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable, shouldConsolidate, spellId, canApplyAura, isBossDebuff, isCastByPlayer
+	local name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable, shouldConsolidate, spellId
 	local settings = self.db.profile["alert_RaidDebuff"]
 
 	if (settings.enable and debuff_list[realzone]) then
@@ -308,7 +311,9 @@ function GridStatusRaidDebuff:ScanUnit(unitid, unitGuid)
 		local index = 0
 		while true do
 			index = index + 1
-			name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable, shouldConsolidate, spellId, canApplyAura, isBuffDebuff, isCastByPlayer = UnitAura(unitid, index, "HARMFUL")
+
+			-- name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable, shouldConsolidate, spellId, canApplyAura, isBuffDebuff, isCastByPlayer = UnitAura(unitid, index, "HARMFUL")
+			name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable, shouldConsolidate, spellId = UnitAura(unitid, index, "HARMFUL")
 
 			-- Check for end of loop
 			if not name then
@@ -318,23 +323,12 @@ function GridStatusRaidDebuff:ScanUnit(unitid, unitGuid)
 			if debuff_list[realzone][name] then
 				data = debuff_list[realzone][name]
 
-				-- Should probably leave this out until there is an example pet spell that this
-				-- is needed for
-				-- isCastByPet = nil
-				-- if
-				-- 	caster_strstart = string.sub(caster, 1, 7)
-				-- 	if caster_strstart == "partype" or caster_strstart == "raidpet" then
-				-- 	 	local caster_name = GetUnitName(caster, true)
-				-- 		self:Debug("!!!! Debuff cast by pet", caster_name, name)
-				--		isCastByPet = true
-				-- 	end
-				-- end
-
-				-- isCastByPlayer is necessary for when a debuff from a player and a zone debuff have the same name
 				-- The debuff from players should not be displayed
 				-- Example: Ticket #6: Exhaustion from Blackrock Foundry
+				-- Other method instead of ignore_ids is:
+				-- not isCastByPlayer
 				if not data.disable and
-				   not isCastByPlayer and 
+				   not ignore_ids[spellId] and 
 				   not (self.db.profile.ignDis and myDispellable[debuffType]) and
 				   not (self.db.profile.ignUndis and debuffType and not myDispellable[debuffType]) then
 
