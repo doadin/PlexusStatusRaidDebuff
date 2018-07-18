@@ -181,9 +181,9 @@ function GridStatusRaidDebuff:ZoneCheck()
 	-- local mapid = select(4, UnitPosition("player"))
 
 	-- Force map to right zone
-	SetMapToCurrentZone()
-	local mapid = GetCurrentMapAreaID()
-	local localzone = GetMapNameByID(mapid)
+	--SetMapToCurrentZone()
+	local mapid = C_Map.GetBestMapForUnit("player")
+	local localzone = C_Map.GetMapInfo(mapid).name
 
 	-- zonetype is a module variable
 	instzone, zonetype = GetInstanceInfo()
@@ -450,7 +450,7 @@ end
 -- end
 
 function GridStatusRaidDebuff:DebuffId(zoneid, first, second, icon_priority, color_priority, timer, stackable, color, default_disable, noicon)
-	local zone = GetMapNameByID(zoneid)
+	local zone = C_Map.GetMapInfo(zoneid).name
 
 	if (zone) then
 		self:DebuffLocale(zone, first, second, icon_priority, color_priority, timer, stackable, color, default_disable, noicon)
@@ -500,7 +500,7 @@ end
 -- end
 
 function GridStatusRaidDebuff:BossNameId(zoneid, order, en_boss)
-	local zone = GetMapNameByID(zoneid)
+	local zone = C_Map.GetMapInfo(zoneid).name
 
 	if (zone) then
 		self:BossNameLocale(zone, order, en_boss)
