@@ -314,7 +314,7 @@ function GridStatusRaidDebuff:ScanUnit(unitid, unitGuid)
 			index = index + 1
 
 			-- name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable, shouldConsolidate, spellId, canApplyAura, isBuffDebuff, isCastByPlayer = UnitAura(unitid, index, "HARMFUL")
-			name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable, shouldConsolidate, spellId = UnitAura(unitid, index, "HARMFUL")
+			name, icon, count, debuffType, duration, expirationTime, caster, isStealable, shouldConsolidate, spellId = UnitAura(unitid, index, "HARMFUL")
 
 			-- Check for end of loop
 			if not name then
