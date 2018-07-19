@@ -1,0 +1,8 @@
+package-as: GridStatusRaidDebuff
+
+externals:
+ Libs/LibBabble-Boss-3.0:
+  url: svn://svn.wowace.com/wow/libbabble-boss-3-0/mainline/trunk
+ Libs/AceLocale-3.0:
+  url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceLocale-3.0
+
