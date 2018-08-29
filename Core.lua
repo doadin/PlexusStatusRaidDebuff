@@ -270,7 +270,7 @@ end
 
 function GridStatusRaidDebuff:ScanNewDebuff(unitid, guid)
     local timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId, name, spellSchool, amount, overkill, school, resisted, blocked, absorbed, critical, glancing, crushing = CombatLogGetCurrentEventInfo()
-	if not name and name == -1 and type(name) == "number" and not type(spellId) == "number" then return end
+	if not name or name == -1 or type(name) == "number" or not type(spellId) == "number" then return end
 	local settings = self.db.profile["alert_RaidDebuff"]
 	if (settings.enable and debuff_list[realzone]) then
 		if sourceGUID and not GridRoster:IsGUIDInGroup(sourceGUID) and GridRoster:IsGUIDInGroup(destGUID)
