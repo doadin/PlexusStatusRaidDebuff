@@ -71,6 +71,7 @@ local ignore_ids = {
     [190185] = true, -- Feral Spirit Shammy Debuff
     [224126] = true, -- Icy Edge Shammy Debuff
     [197509] = true, -- Bloodworm DK Debuff
+    [5215] = true, -- Prowl Druid Debuff
 }
 
 local clientVersion
