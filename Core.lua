@@ -67,6 +67,10 @@ local ignore_ids = {
 	[6788] = true, -- Weakened Soul
 	[57723] = true, -- Exhaustion
 	[95809] = true, -- Insanity (hunter pet Ancient Hysteria debuff)
+    [224127] = true, -- Crackling Surge Shammy Debuff
+    [190185] = true, -- Feral Spirit Shammy Debuff
+    [224126] = true, -- Icy Edge Shammy Debuff
+    [197509] = true, -- Bloodworm DK Debuff
 }
 
 local clientVersion
