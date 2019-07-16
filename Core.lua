@@ -190,7 +190,9 @@ function GridStatusRaidDebuff:ZoneCheck()
 	-- Force map to right zone
 	--SetMapToCurrentZone()
 	local mapid = C_Map.GetBestMapForUnit("player")
-	local localzone = C_Map.GetMapInfo(mapid).name
+    if type(mapid) == "number" then
+	    local localzone = C_Map.GetMapInfo(mapid).name
+    end
 
 	-- zonetype is a module variable
 	instzone, zonetype = GetInstanceInfo()
