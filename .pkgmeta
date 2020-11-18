@@ -1,4 +1,4 @@
-package-as: GridStatusRaidDebuff
+package-as: PlexusStatusRaidDebuff
 
 externals:
  Libs/LibBabble-Boss-3.0:

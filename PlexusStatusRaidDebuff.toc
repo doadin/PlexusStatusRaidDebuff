@@ -1,0 +1,27 @@
+#@retail@
+## Interface: 90002
+#@end-retail@
+#@non-retail@
+## Interface: 11305
+#@end-non-retail@
+## Title: PlexusStatusRaidDebuff
+## Notes: Adds a status to Plexus for debuffs applied by Raid Bosses.
+## Notes-ruRU: Дополнительный модуль для Plexus, отображает дебаффы рейдовых боссов.
+## Notes-zhCN: [Plexus] 在 Plexus 添加团队减益状态提示。
+## Notes-zhTW: [Plexus] 在 Plexus 添加團隊減益狀態提示。
+## Author: Azelkeeber(KR-Tirion),Toadkiller,Stassart,Doadin
+## Version: @project-version@
+## Grid Author: Pastamancer & Maia
+## OptionalDeps: LibBabble-Zone-3.0, LibBabble-Boss-3.0, AceLocale-3.0, Grid, Plexus
+## X-Category: UnitFrame
+## X-Curse-Project-ID: 42578
+
+#@no-lib-strip@
+Libs\AceLocale-3.0\AceLocale-3.0.xml
+Libs\LibBabble-Boss-3.0\lib.xml
+#@end-no-lib-strip@
+
+Locale\Locale.xml
+
+Core.lua
+
