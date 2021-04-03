@@ -1,9 +1,7 @@
-#@retail@
 ## Interface: 90005
-#@end-retail@
-#@non-retail@
-## Interface: 11306
-#@end-non-retail@
+## Interface-Retail: 90005
+## Interface-Classic: 11306
+## Interface-BC: 20501
 ## Title: PlexusStatusRaidDebuff
 ## Notes: Adds a status to Plexus for debuffs applied by Raid Bosses.
 ## Notes-ruRU: Дополнительный модуль для Plexus, отображает дебаффы рейдовых боссов.
