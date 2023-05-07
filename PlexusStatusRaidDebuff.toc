@@ -16,6 +16,8 @@
 ## X-Category: UnitFrame
 ## X-Curse-Project-ID: 42578
 
+## IconTexture: Interface\AddOns\Plexus\Media\icon
+
 #@no-lib-strip@
 Libs\AceLocale-3.0\AceLocale-3.0.xml
 Libs\LibBabble-Boss-3.0\lib.xml
