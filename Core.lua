@@ -88,12 +88,14 @@ if not _G.GetSpecialization then
     end
 end
 local dispelMap = {
-    ["PRIEST"] = {["Magic"] = true, ["Disease"] = ((GetSpecialization() == 1) or (GetSpecialization() == 2))},
-    ["PALADIN"] = {["Disease"] = true, ["Poison"] = true, ["Magic"] = (GetSpecialization() == 1)},
-    ["MAGE"] = {["Curse"] = true},
-    ["DRUID"] = {["Curse"] = true, ["Poison"] = true, ["Magic"] = (GetSpecialization() == 4)},
-    ["SHAMAN"] = {["Curse"] = true, ["Magic"] = (GetSpecialization() == 3)},
-    ["MONK"] = {["Disease"] = true, ["Poison"] = true, ["Magic"] = (GetSpecialization() == 2)},
+    ["PRIEST"] = {["Magic"] = IsPlayerSpell(527), ["Disease"] = (IsPlayerSpell(390632) or IsPlayerSpell(213634))},
+    ["PALADIN"] = {["Disease"] = (IsPlayerSpell(393024) or IsPlayerSpell(213644)), ["Poison"] = (IsPlayerSpell(393024) or IsPlayerSpell(213644)), ["Magic"] = IsPlayerSpell(4987)},
+    ["MAGE"] = {["Curse"] = IsPlayerSpell(475)},
+    ["DRUID"] = {["Curse"] = (IsPlayerSpell(392378) or IsPlayerSpell(2782)), ["Poison"] = (IsPlayerSpell(393024) or IsPlayerSpell(213644)), ["Magic"] = IsPlayerSpell(88423)},
+    ["SHAMAN"] = {["Curse"] = (IsPlayerSpell(383016) or IsPlayerSpell(51886)), ["Magic"] = IsPlayerSpell(77130), ["Poison"] = IsPlayerSpell(383013)},
+    ["MONK"] = {["Disease"] = (IsPlayerSpell(388874) or IsPlayerSpell(218164)), ["Poison"] = (IsPlayerSpell(388874) or IsPlayerSpell(218164)), ["Magic"] = IsPlayerSpell(115450)},
+    ["WARLOCK"] = {["Magic"] = IsSpellKnown(115276, true) or IsSpellKnown(89808, true)},
+    ["EVOKER"] = {["Curse"] = IsPlayerSpell(374251), ["Disease"] = IsPlayerSpell(374251), ["Magic"] = IsPlayerSpell(360823), ["Poison"] = IsPlayerSpell(360823) or IsPlayerSpell(365585) or IsPlayerSpell(374251)},
 }
 
 -- Spells to ignore detecting
@@ -259,8 +261,9 @@ function GridStatusRaidDebuff:ZoneCheck()
     self:CheckDetectZone()
 
 if IsRetailWow() then
+    -- PRIEST PALADIN MAGE DRUID SHAMAN MONK WARLOCK EVOKER
     if myClass == "PALADIN" or myClass == "DRUID" or myClass == "SHAMAN" or myClass == "PRIEST" or
-       myClass == "MONK" then
+        myClass == "MONK" or myClass == "MAGE" or myClass == "WARLOCK" or myClass == "EVOKER" then
         self:RegisterEvent("PLAYER_TALENT_UPDATE")
     end
 end
@@ -300,15 +303,33 @@ end
 
 function GridStatusRaidDebuff:PLAYER_TALENT_UPDATE() --luacheck: ignore 212
     if myClass == "PALADIN" then
-        myDispellable["Magic"] = (GetSpecialization() == 1)
+        myDispellable["Disease"] = IsPlayerSpell(393024) or IsPlayerSpell(213644)
+        myDispellable["Magic"] = IsPlayerSpell(4987)
+        myDispellable["Poison"] = IsPlayerSpell(393024) or IsPlayerSpell(213644)
     elseif myClass == "DRUID" then
-        myDispellable["Magic"] = (GetSpecialization() == 4)
+        myDispellable["Curse"] = IsPlayerSpell(392378) or IsPlayerSpell(2782)
+        myDispellable["Magic"] = IsPlayerSpell(88423)
+        myDispellable["Poison"] = IsPlayerSpell(392378) or IsPlayerSpell(2782)
     elseif myClass == "SHAMAN" then
-        myDispellable["Magic"] = (GetSpecialization() == 3)
+        myDispellable["Curse"] = IsPlayerSpell(383016) or IsPlayerSpell(51886)
+        myDispellable["Magic"] = IsPlayerSpell(77130)
+        myDispellable["Poison"] = IsPlayerSpell(383013)
     elseif myClass == "PRIEST" then
-        myDispellable["Disease"] = ((GetSpecialization() == 1) or (GetSpecialization() == 2))
+        myDispellable["Disease"] = IsPlayerSpell(390632) or IsPlayerSpell(213634)
+        myDispellable["Magic"] = IsPlayerSpell(527)
     elseif myClass == "MONK" then
-        myDispellable["Magic"] = (GetSpecialization() == 2)
+        myDispellable["Disease"] = IsPlayerSpell(388874) or IsPlayerSpell(218164)
+        myDispellable["Magic"] = IsPlayerSpell(115450)
+        myDispellable["Poison"] = IsPlayerSpell(388874) or IsPlayerSpell(218164)
+    elseif myClass == "WARLOCK" then
+        myDispellable["Magic"] = IsSpellKnown(115276, true) or IsSpellKnown(89808, true)
+    elseif myClass == "MAGE" then
+        myDispellable["Curse"] = IsPlayerSpell(475)
+    elseif myClass == "EVOKER" then
+        myDispellable["Curse"] = IsPlayerSpell(374251)
+        myDispellable["Disease"] = IsPlayerSpell(374251)
+        myDispellable["Magic"] = IsPlayerSpell(360823)
+        myDispellable["Poison"] = IsPlayerSpell(360823) or IsPlayerSpell(365585) or IsPlayerSpell(374251)
     end
 end
 
