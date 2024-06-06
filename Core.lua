@@ -15,11 +15,11 @@ local L = LibStub("AceLocale-3.0"):GetLocale("GridStatusRaidDebuff")
 ---------------------------------------------------------
 --	local
 ---------------------------------------------------------
+local Plexus = _G.Plexus
 local realzone, detectStatus, zonetype
 local db, myClass, myDispellable
 local debuff_list = {}
 local refreshEventScheduled = false
-local refreshTimer
 
 --local function IsClassicWow()
 --	return _G.WOW_PROJECT_ID == _G.WOW_PROJECT_CLASSIC
@@ -34,14 +34,10 @@ local function IsRetailWow()
 end
 
 local GetSpecialization = _G.GetSpecialization
-local IsAddOnLoaded = _G.IsAddOnLoaded
 local UnitClass = _G.UnitClass
 local C_Map = _G.C_Map
 local GetInstanceInfo = _G.GetInstanceInfo
-local CombatLogGetCurrentEventInfo = _G.CombatLogGetCurrentEventInfo
-local UnitDebuff = _G.UnitDebuff
 local UnitGUID = _G.UnitGUID
-local UnitAura = _G.UnitAura
 local CreateFrame = _G.CreateFrame
 local UIParent = _G.UIParent
 local ChatEdit_GetActiveWindow = _G.ChatEdit_GetActiveWindow
@@ -49,7 +45,8 @@ local GetSpellLink = _G.GetSpellLink
 local InCombatLockdown = _G.InCombatLockdown
 local ChatFrame1 = _G.ChatFrame1
 
-
+local GetAuraDataByAuraInstanceID = _G.C_UnitAuras and _G.C_UnitAuras.GetAuraDataByAuraInstanceID
+local ForEachAura = _G.AuraUtil and _G.AuraUtil.ForEachAura
 
 local colorMap = {
     ["Curse"] = { r = .6, g =  0, b = 1},
@@ -137,30 +134,18 @@ local ignore_ids = {
 ---------------------------------------------------------
 --	Core
 ---------------------------------------------------------
-local GridFrame
-local GridRoster
-_G.GridStatusRaidDebuff = _G.Grid:NewStatusModule("GridStatusRaidDebuff", "AceTimer-3.0")
-_G.GridStatusRaidDebuff.menuName = L["Raid Debuff"]
 
-if (IsAddOnLoaded("Grid")) then
-GridFrame = _G.Grid:GetModule("GridFrame")
-GridRoster = _G.Grid:GetModule("GridRoster")
-end
+GridStatusRaidDebuff = Plexus:NewStatusModule("GridStatusRaidDebuff")
+GridStatusRaidDebuff.menuName = L["Raid Debuff"]
 
-if (IsAddOnLoaded("Plexus")) then
-GridFrame = _G.Grid:GetModule("PlexusFrame")
-GridRoster = _G.Grid:GetModule("PlexusRoster")
-end
-
-local GridStatusRaidDebuff = _G.GridStatusRaidDebuff
+local PlexusFrame = Plexus:GetModule("PlexusFrame")
+local PlexusRoster = Plexus:GetModule("PlexusRoster")
 
 local GetSpellInfo = _G.GetSpellInfo
 local fmt = string.format
 --local ssub = string.sub
 
 GridStatusRaidDebuff.defaultDB = {
-    -- Removed from Grid 1477
-    -- debug = false,
     isFirst = true,
 
     ["alert_RaidDebuff"] = {
@@ -175,7 +160,6 @@ GridStatusRaidDebuff.defaultDB = {
     ignDis = false,
     ignUndis = false,
     detect = true,
-    frequency = 0.1,
 
     ["debuff_options"] = {},
     ["detected_debuff"] = {},
@@ -188,11 +172,6 @@ function GridStatusRaidDebuff:OnInitialize()
 end
 
 function GridStatusRaidDebuff:OnEnable()
-    -- Removed from Grid 1477
-    -- self.debugging = self.db.profile.debug
-    -- New variable:
-    -- self.debugging = GridStatusRaidDebuff.debug
-
     myClass = select(2, UnitClass("player"))
     myDispellable = dispelMap[myClass]
 
@@ -203,13 +182,14 @@ function GridStatusRaidDebuff:OnEnable()
     end
 
     if self.db.profile.isFirst then
-        GridFrame.db.profile.statusmap["icon"].alert_RaidDebuff  =  true, --luacheck: ignore
-        GridFrame:UpdateAllFrames()
+        PlexusFrame.db.profile.statusmap["icon"].alert_RaidDebuff  =  true
+        PlexusFrame:UpdateAllFrames()
         self.db.profile.isFirst = false
     end
 
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "ZoneCheck")
+    self:RegisterEvent("UNIT_AURA", "ScanUnit")
     self:RegisterCustomDebuff()
 end
 
@@ -231,10 +211,6 @@ function GridStatusRaidDebuff:CheckDetectZone()
     if detectStatus then
         self:CreateZoneMenu(realzone)
         if not debuff_list[realzone] then debuff_list[realzone] = {} end
-    -- FIXME
-        self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", "ScanNewDebuff")
-    else
-        self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     end
 end
 
@@ -274,32 +250,25 @@ function GridStatusRaidDebuff:ZoneCheck()
     self:UpdateAllUnits()
     self:CheckDetectZone()
 
-if IsRetailWow() then
-    -- PRIEST PALADIN MAGE DRUID SHAMAN MONK WARLOCK EVOKER
-    if myClass == "PALADIN" or myClass == "DRUID" or myClass == "SHAMAN" or myClass == "PRIEST" or
-        myClass == "MONK" or myClass == "MAGE" or myClass == "WARLOCK" or myClass == "EVOKER" then
-        self:RegisterEvent("PLAYER_TALENT_UPDATE")
+    if IsRetailWow() then
+        -- PRIEST PALADIN MAGE DRUID SHAMAN MONK WARLOCK EVOKER
+        if myClass == "PALADIN" or myClass == "DRUID" or myClass == "SHAMAN" or myClass == "PRIEST" or
+            myClass == "MONK" or myClass == "MAGE" or myClass == "WARLOCK" or myClass == "EVOKER" then
+            self:RegisterEvent("PLAYER_TALENT_UPDATE")
+        end
     end
-end
 
     if debuff_list[realzone] then
         if not refreshEventScheduled then
-            refreshTimer = self:ScheduleRepeatingTimer("UpdateAllUnits", self.db.profile.frequency)
-            self:RegisterMessage("Grid_UnitJoined")
+            self:RegisterMessage("Plexus_UnitJoined")
             refreshEventScheduled = true
         end
     else
         if refreshEventScheduled then
-            self:CancelTimer(refreshTimer)
-            self:UnregisterMessage("Grid_UnitJoined")
+            self:UnregisterMessage("Plexus_UnitJoined")
             refreshEventScheduled = false
         end
     end
-end
-
-function GridStatusRaidDebuff:UpdateRefresh()
-    self:CancelTimer(refreshTimer)
-    refreshTimer = self:ScheduleRepeatingTimer("UpdateAllUnits", self.db.profile.frequency)
 end
 
 function GridStatusRaidDebuff:RegisterStatuses()
@@ -311,8 +280,8 @@ function GridStatusRaidDebuff:UnregisterStatuses()
     self:UnregisterStatus("alert_RaidDebuff")
 end
 
-function GridStatusRaidDebuff:Grid_UnitJoined(_, guid, unitid)
-    self:ScanUnit(unitid, guid)
+function GridStatusRaidDebuff:Plexus_UnitJoined(_, guid, unitid)
+    self:ScanUnit("UpdateAllUnits", unitid, {isFullUpdate = true})
 end
 
 function GridStatusRaidDebuff:PLAYER_TALENT_UPDATE() --luacheck: ignore 212
@@ -362,113 +331,202 @@ function GridStatusRaidDebuff:PLAYER_TALENT_UPDATE() --luacheck: ignore 212
 end
 
 function GridStatusRaidDebuff:UpdateAllUnits()
-    for guid, unitid in GridRoster:IterateRoster() do
-        self:ScanUnit(unitid, guid)
+    for guid, unitid in PlexusRoster:IterateRoster() do
+        self:ScanUnit("UpdateAllUnits", unitid, {isFullUpdate = true})
     end
 end
 
-function GridStatusRaidDebuff:ScanNewDebuff(_, _)
-    local _, event, _, sourceGUID, sourceName, _, _, destGUID, destName, _, _, spellId, name, _, auraType = CombatLogGetCurrentEventInfo()
+local unitAuras
+function GridStatusRaidDebuff:ScanUnit(event, unit, updatedAuras)
     local settings = self.db.profile["alert_RaidDebuff"]
-    if (settings.enable and debuff_list[realzone]) then
-        if event == "SPELL_AURA_APPLIED" and sourceGUID and auraType == "DEBUFF" and not GridRoster:IsGUIDInGroup(sourceGUID) and GridRoster:IsGUIDInGroup(destGUID)
-            and not debuff_list[realzone][name] then
-            if ignore_ids[spellId] then return end --Ignore Dazed
+    local guid = UnitGUID(unit)
+    if not PlexusRoster:IsGUIDInGroup(guid) then return end
 
-            -- Filter out non-debuff effects, only debuff effects are shown
-            -- No reason to detect buffs too
-            local unitid, debuff
-            unitid = GridRoster:GetUnitidByGUID(destGUID)
-            debuff = false
-            for i=1,40 do
-                local spellname = UnitDebuff(unitid, i)
-                if not spellname then break end
-                if spellname == name then
-                    debuff = true
-                else
-                    self:Debug("Debuff not found", name)
+    if (settings.enable and debuff_list[realzone]) then
+        if not unit then
+            return
+        end
+
+        if not guid then
+            return
+        end
+        if not unitAuras then
+            unitAuras = {}
+        end
+
+        -- Full Update
+        if (updatedAuras and updatedAuras.isFullUpdate) then --or (not updatedAuras.isFullUpdate and (not updatedAuras.addedAuras and not updatedAuras.updatedAuraInstanceIDs and not updatedAuras.removedAuraInstanceIDs)) then
+            local unitauraInfo = {}
+            if (AuraUtil.ForEachAura) then
+                --ForEachAura(unit, "HELPFUL", nil,
+                --    function(aura)
+                --        if aura and aura.auraInstanceID then
+                --            unitauraInfo[aura.auraInstanceID] = aura
+                --        end
+                --    end,
+                --true)
+                ForEachAura(unit, "HARMFUL", nil,
+                    function(aura)
+                        if aura and aura.auraInstanceID then
+                            unitauraInfo[aura.auraInstanceID] = aura
+                        end
+                    end,
+                true)
+            else
+                --for i = 0, 40 do
+                --    local auraData = C_UnitAuras.GetAuraDataByIndex(unit, i, "HELPFUL")
+                --    if auraData then
+                --        unitauraInfo[auraData.auraInstanceID] = auraData
+                --    end
+                --end
+                for i = 0, 40 do
+                    local auraData = C_UnitAuras.GetAuraDataByIndex(unit, i, "HARMFUL")
+                    if auraData then
+                        unitauraInfo[auraData.auraInstanceID] = auraData
+                    end
                 end
-                --if (UnitDebuff(unitid, i)) then
-                --	debuff = true
-                -- else
-                -- 	self:Debug("Debuff not found", name)
+            end
+            if unitAuras[guid] then
+                self.core:SendStatusLost(guid, "alert_RaidDebuff")
+                unitAuras[guid] = nil
+            end
+            for _, v in pairs(unitauraInfo) do
+                if not unitAuras[guid] then
+                    unitAuras[guid] = {}
+                end
+                if v.spellId == 367364 then
+                    v.name = "Echo: Reversion"
+                end
+                if v.spellId == 376788 then
+                    v.name = "Echo: Dream Breath"
+                end
+                --if buff_names[v.name] or player_buff_names[v.name] or debuff_names[v.name] or player_debuff_names[v.name] or debuff_types[v.dispelName] then
+                    unitAuras[guid][v.auraInstanceID] = v
                 --end
             end
-            if not debuff then return end
-
-            self:Debug("New Debuff", sourceName, destName, name, unitid, tostring(debuff))
-
-            self:DebuffLocale(realzone, name, spellId, 5, 5, true, true)
-            if not self.db.profile.detected_debuff[realzone] then self.db.profile.detected_debuff[realzone] = {} end
-            if not self.db.profile.detected_debuff[realzone][name] then self.db.profile.detected_debuff[realzone][name] = spellId end
-
-            self:LoadZoneDebuff(realzone, name)
-
         end
-    end
-end
 
-function GridStatusRaidDebuff:ScanUnit(unitid, unitGuid)
-    local guid = unitGuid or UnitGUID(unitid)
-    --if not GridRoster:IsGUIDInGroup(guid) then	return end
+        if updatedAuras and updatedAuras.addedAuras then
+            for _, aura in pairs(updatedAuras.addedAuras) do
+                if aura.spellId == 367364 then
+                    aura.name = "Echo: Reversion"
+                end
+                if aura.spellId == 376788 then
+                    aura.name = "Echo: Dream Breath"
+                end
+                --if buff_names[aura.name] or player_buff_names[aura.name] or debuff_names[aura.name] or player_debuff_names[aura.name] or debuff_types[aura.dispelName] then
+                    if not unitAuras[guid] then
+                        unitAuras[guid] = {}
+                    end
+                    unitAuras[guid][aura.auraInstanceID] = aura
+                --end
+           end
+        end
 
-    local name, icon, count, debuffType, duration, expirationTime, _, spellId
-    local settings = self.db.profile["alert_RaidDebuff"]
+        if updatedAuras and updatedAuras.updatedAuraInstanceIDs then
+            for _, auraInstanceID in ipairs(updatedAuras.updatedAuraInstanceIDs) do
+                local auraTable = GetAuraDataByAuraInstanceID(unit, auraInstanceID)
+                if auraTable and auraTable.spellId == 367364 then
+                    auraTable.name = "Echo: Reversion"
+                end
+                if auraTable and auraTable.spellId == 376788 then
+                    auraTable.name = "Echo: Dream Breath"
+                end
+                if not unitAuras[guid] then
+                    unitAuras[guid] = {}
+                end
+                unitAuras[guid][auraInstanceID] = auraTable
+                --if auraTable then
+                --    --if buff_names[auraTable.name] or player_buff_names[auraTable.name] or debuff_names[auraTable.name] or player_debuff_names[auraTable.name] or debuff_types[auraTable.dispelName] then
+                --        if not unitAuras[guid] then
+                --            unitAuras[guid] = {}
+                --        end
+                --        unitAuras[guid][auraInstanceID] = auraTable
+                --    --end
+                --end
+            end
+        end
 
-    if (settings.enable and debuff_list[realzone]) then
-        local d_name, di_prior, dc_prior, d_icon,d_color,d_startTime,d_durTime,d_count
-        -- local dt_prior
-        local data
+        if updatedAuras and updatedAuras.removedAuraInstanceIDs then
+            for _, auraInstanceIDTable in ipairs(updatedAuras.removedAuraInstanceIDs) do
+                if unitAuras[guid] and unitAuras[guid][auraInstanceIDTable] then
+                    unitAuras[guid][auraInstanceIDTable] = nil
+                    self.core:SendStatusLost(guid, "alert_RaidDebuff")
+                end
+            end
+        end
 
+        --for unitID,auraInstanceIDTable in pairs(unitAuras) do
+        local d_name, di_prior, dc_prior, d_icon, d_color, d_startTime, d_durTime, d_count, data
         di_prior = 0
         dc_prior = 0
-        -- dt_prior = 0
-
-        local index = 0
-        while true do
-            index = index + 1
-
-            -- name, rank, icon, count, debuffType, duration, expirationTime, caster, isStealable, shouldConsolidate, spellId, canApplyAura, isBuffDebuff, isCastByPlayer = UnitAura(unitid, index, "HARMFUL")
-            name, icon, count, debuffType, duration, expirationTime, _, _, _, spellId = UnitAura(unitid, index, "HARMFUL")
-
-            -- Check for end of loop
-            if not name then
-                break
-            end
-
-            if debuff_list[realzone][name] then
-                data = debuff_list[realzone][name]
-
-                -- The debuff from players should not be displayed
-                -- Example: Ticket #6: Exhaustion from Blackrock Foundry
-                -- Other method instead of ignore_ids is:
-                -- not isCastByPlayer
-                if not data.disable and
-                   not ignore_ids[spellId] and
-                   not (self.db.profile.ignDis and myDispellable[debuffType]) and
-                   not (self.db.profile.ignUndis and debuffType and not myDispellable[debuffType]) then
-
-                    if di_prior < data.i_prior then
-                        di_prior = data.i_prior
-                        d_name = name
-                        d_icon = 	not data.noicon and icon
-                        -- if data.timer and dt_prior < data.i_prior then
-                        if data.timer then
-                            d_startTime = expirationTime - duration
-                            d_durTime = duration
+        if unitAuras[guid] then
+            local numAuras = 0
+            --id, info
+            for id, info in pairs(unitAuras[guid]) do
+                local auraTable = GetAuraDataByAuraInstanceID(unit, id)
+                if not auraTable then
+                    unitAuras[guid][id] = nil
+                end
+                if auraTable  then
+                    numAuras = numAuras + 1
+                    if debuff_list[realzone][info.name] then
+                        data = debuff_list[realzone][info.name]
+                        if not data.disable and
+                           not info.isFromPlayerOrPlayerPet and
+                           not (self.db.profile.ignDis and myDispellable[info.dispelName]) and
+                           not (self.db.profile.ignUndis and not myDispellable[info.dispelName]) then
+                            if di_prior < data.i_prior then
+                                di_prior = data.i_prior
+                                d_name = info.name
+                                d_icon = not data.noicon and info.icon
+                                -- if data.timer and dt_prior < data.i_prior then
+                                if data.timer then
+                                    d_startTime = info.expirationTime - info.duration
+                                    d_durTime = info.duration
+                                end
+                            end
+                            --Stack
+                            if info and info.applications > 0 then
+                                d_count = info.applications --count
+                            end
+                            --Color Priority
+                            if dc_prior < data.c_prior then
+                                dc_prior = data.c_prior
+                                d_color = (data.custom_color and data.color) or colorMap[info.dispelName] or settings.color
+                            end
                         end
                     end
-                    --Stack
-                    if data.stackable then
-                        d_count = count
-                    end
-                    --Color Priority
-                    if dc_prior < data.c_prior then
-                        dc_prior = data.c_prior
-                        d_color = (data.custom_color and data.color) or colorMap[debuffType] or settings.color
+                end
+
+                -- Detect New Debuffs
+                if auraTable and detectStatus then
+                    local name = info and info.name
+                    local spellid = info and info.spellId
+                    local sourceName = info and info.sourceUnit and UnitName(info.sourceUnit)
+                    local destName = info and unit and UnitName(unit)
+                    local sourceGUID = info and info.sourceUnit and UnitGUID(info.sourceUnit)
+                    if name and spellid and sourceName and destName and sourceGUID then
+                        if info.isHarmful and not PlexusRoster:IsGUIDInGroup(sourceGUID) and PlexusRoster:IsGUIDInGroup(guid)
+                            and not debuff_list[realzone][name] then
+                            if not ignore_ids[spellid] then
+                                self:Debug("New Debuff", sourceName, destName, name, unit, tostring(info.isHarmful))
+                                self:DebuffLocale(realzone, name, spellid, 5, 5, true, true)
+                                if not self.db.profile.detected_debuff[realzone] then self.db.profile.detected_debuff[realzone] = {} end
+                                if not self.db.profile.detected_debuff[realzone][name] then self.db.profile.detected_debuff[realzone][name] = spellid end
+                                self:LoadZoneDebuff(realzone, name)
+                            end
+                        end
                     end
                 end
             end
+
+            if numAuras == 0 then
+                unitAuras[guid] = nil
+                self.core:SendStatusLost(guid, "alert_RaidDebuff")
+            end
+        else
+            self.core:SendStatusLost(guid, "alert_RaidDebuff")
         end
 
         if d_color and not d_color.a then
@@ -483,8 +541,6 @@ function GridStatusRaidDebuff:ScanUnit(unitid, unitGuid)
             self.core:SendStatusGained(
             guid, "alert_RaidDebuff", settings.priority, (settings.range and 40),
             d_color, nil, nil, nil, d_icon, d_startTime, d_durTime, d_count)
-        else
-            self.core:SendStatusLost(guid, "alert_RaidDebuff")
         end
     else
         self.core:SendStatusLost(guid, "alert_RaidDebuff")
@@ -547,23 +603,6 @@ function GridStatusRaidDebuff:DebuffLocale(zone, first, second, icon_priority, c
     end
 end
 
--- This function is dependent on libbabble-zone and is deprecated as of WoW 5.2
--- function GridStatusRaidDebuff:Debuff(en_zone, first, second, icon_priority, color_priority, timer, stackable, color, default_disable, noicon)
--- 	local zone = bzone[en_zone]
-
--- 	if (zone) then
--- 		-- Call with localized zone
--- 		self:DebuffLocale(zone, first, second, icon_priority, color_priority, timer, stackable, color, default_disable, noicon)
--- 	else
--- 		-- The structure is stored by localized zone
--- 		-- If we only have the English zone and not the localized one
--- 		-- we can't store it
--- 		-- self:Debug("Debuff", realzone, "en_zone translation not found")
--- 		-- warn(("LibBabble translation for zone %q not found"):format(en_zone))
--- 		self:Debug(("LibBabble translation for zone %q not found"):format(en_zone))
--- 	end
--- end
-
 function GridStatusRaidDebuff:DebuffId(zoneid, first, second, icon_priority, color_priority, timer, stackable, color, default_disable, noicon)
     local zone = C_Map.GetMapInfo(zoneid).name
 
@@ -598,22 +637,6 @@ function GridStatusRaidDebuff:BossNameLocale(zone, order, en_boss)
     }
 end
 
--- This function is dependent on libbabble-zone and is deprecated as of WoW 5.2
--- function GridStatusRaidDebuff:BossName(en_zone, order, en_boss)
--- 	local zone = bzone[en_zone]
---
--- 	if (zone) then
--- 		self:BossNameLocale(zone, order, en_boss)
--- 	else
--- 		-- The structure is stored by localized zone
--- 		-- If we only have the English zone and not the localized one
--- 		-- we can't store it
--- 		-- self:Debug("BossName", realzone, "zone translation not found")
--- 		-- warn(("LibBabble translation for zone %q not found"):format(en_zone))
--- 		self:Debug(("LibBabble translation for zone %q not found"):format(en_zone))
--- 	end
--- end
-
 function GridStatusRaidDebuff:BossNameId(zoneid, order, en_boss)
     local zone = C_Map.GetMapInfo(zoneid).name
 
@@ -625,16 +648,15 @@ function GridStatusRaidDebuff:BossNameId(zoneid, order, en_boss)
 end
 
 -- Create a custom tooltip for debuff description
-local tip = CreateFrame("GameTooltip", "GridStatusRaidDebuffTooltip", nil, "GameTooltipTemplate")
+local tip = CreateFrame("GameTooltip", "PlexusStatusRaidDebuffTooltip", nil, "GameTooltipTemplate")
 tip:SetOwner(UIParent, "ANCHOR_NONE")
 for i = 1, 10 do
-    tip[i] = _G["GridStatusRaidDebuffTooltipTextLeft"..i]
+    tip[i] = _G["PlexusStatusRaidDebuffTooltipTextLeft"..i]
     if not tip[i] then
         tip[i] = tip:CreateFontString()
         tip:AddFontStrings(tip[i], tip:CreateFontString())
     end
 end
-
 
 function GridStatusRaidDebuff:LoadZoneMenu(zone)
     local args = self.options.args[zone].args
@@ -922,10 +944,10 @@ function GridStatusRaidDebuff:CreateMainMenu()
             desc = L["Enable %s"]:format(L["Border"]),
             order = 98,
             disabled = InCombatLockdown,
-            get = function() return GridFrame.db.profile.statusmap["border"].alert_RaidDebuff end,
+            get = function() return PlexusFrame.db.profile.statusmap["border"].alert_RaidDebuff end,
             set = function(_, v)
-                            GridFrame.db.profile.statusmap["border"].alert_RaidDebuff  =  v
-                            GridFrame:UpdateAllFrames()
+                            PlexusFrame.db.profile.statusmap["border"].alert_RaidDebuff  =  v
+                            PlexusFrame:UpdateAllFrames()
                         end,
     }
     args["Icon"] = {
@@ -934,10 +956,10 @@ function GridStatusRaidDebuff:CreateMainMenu()
             desc = L["Enable %s"]:format(L["Center Icon"]),
             order = 99,
             disabled = InCombatLockdown,
-            get = function() return GridFrame.db.profile.statusmap["icon"].alert_RaidDebuff end,
+            get = function() return PlexusFrame.db.profile.statusmap["icon"].alert_RaidDebuff end,
             set = function(_, v)
-                            GridFrame.db.profile.statusmap["icon"].alert_RaidDebuff  =  v
-                            GridFrame:UpdateAllFrames()
+                            PlexusFrame.db.profile.statusmap["icon"].alert_RaidDebuff  =  v
+                            PlexusFrame:UpdateAllFrames()
                         end,
     }
     args["Ignore dispellable"] = {
@@ -963,21 +985,6 @@ function GridStatusRaidDebuff:CreateMainMenu()
                         self:UpdateAllUnits()
                     end,
     }
-    args["Frequency"] = {
-        type = "range",
-        name = L["Aura Refresh Frequency"],
-        desc = L["Aura Refresh Frequency"],
-        min = 0.01,
-        max = 0.5,
-        order = 102,
-        step = 0.01,
-        get = function()
-                        return self.db.profile.frequency
-                    end,
-        set = function(_, v)
-                        self.db.profile.frequency = v
-                    end,
-    }
     args["Detect"] = {
         type = "toggle",
         name = L["detector"],
@@ -998,11 +1005,8 @@ function GridStatusRaidDebuff:CreateMainMenu()
 end
 
 function GridStatusRaidDebuff:RegisterCustomDebuff()
-    -- local en_zone
     for zone,j in pairs(self.db.profile.detected_debuff) do
         self:BossNameLocale(zone, L["Detected debuff"])
-
-        -- en_zone = bzoneRev[zone]
 
         for name,k in pairs(j) do
             self:DebuffLocale(zone, name, k, 5, 5, true, true)
