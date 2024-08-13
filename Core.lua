@@ -129,7 +129,7 @@ GridStatusRaidDebuff.menuName = L["Raid Debuff"]
 local PlexusFrame = Plexus:GetModule("PlexusFrame")
 local PlexusRoster = Plexus:GetModule("PlexusRoster")
 
-local GetSpellInfo = _G.GetSpellInfo
+local GetSpellInfo = C_Spell and C_Spell.GetSpellInfo or _G.GetSpellInfo
 local fmt = string.format
 --local ssub = string.sub
 
@@ -705,11 +705,23 @@ function GridStatusRaidDebuff:DebuffLocale(zone, first, second, icon_priority, c
     self:CreateZoneMenu(zone)
 
     if type(first) == "number" then
-        name, _, icon = GetSpellInfo(first)
+        if _G.C_Spell and _G.C_Spell.GetSpellInfo  then
+            local spellInfo = GetSpellInfo(first)
+            name = spellInfo and spellInfo.name
+            icon = spellInfo and spellInfo.iconID
+        else
+            name, _, icon = GetSpellInfo(first)
+        end
         id = first
         order = second
     else
-        name, _, icon = GetSpellInfo(second)
+        if _G.C_Spell and _G.C_Spell.GetSpellInfo  then
+            local spellInfo = GetSpellInfo(second)
+            name = spellInfo and spellInfo.name
+            icon = spellInfo and spellInfo.iconID
+        else
+            name, _, icon = GetSpellInfo(second)
+        end
         id = second
         order = 9999
         detected = true
@@ -1040,7 +1052,13 @@ function GridStatusRaidDebuff:CreateZoneMenu(zone)
                     get = false,
                     usage = "SpellID",
                     set = function(_, v)
-                        local name = GetSpellInfo(v)
+                        local name
+                        if _G.C_Spell and _G.C_Spell.GetSpellInfo  then
+                            local spellInfo = GetSpellInfo(v)
+                            name = spellInfo and spellInfo.name
+                        else
+                            name = GetSpellInfo(v)
+                        end
                         -- self:Debug("Import", zone, name, v)
                         if name then
                                 self:DebuffLocale(zone, name, v, 5, 5, true, true)
