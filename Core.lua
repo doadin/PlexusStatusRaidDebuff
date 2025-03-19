@@ -521,7 +521,7 @@ function GridStatusRaidDebuff:ScanUnit(event, unit, updatedAuras)
                     if debuff_list[realzone][info.name] then
                         data = debuff_list[realzone][info.name]
                         if not data.disable and
-                           not info.isFromPlayerOrPlayerPet and
+                           --not info.isFromPlayerOrPlayerPet and
                            not (self.db.profile.ignDis and myDispellable[info.dispelName]) and
                            not (self.db.profile.ignUndis and not myDispellable[info.dispelName]) then
                             if di_prior < data.i_prior then
