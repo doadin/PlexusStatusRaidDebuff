@@ -147,7 +147,7 @@ GridStatusRaidDebuff.defaultDB = {
 
     ignDis = false,
     ignUndis = false,
-    detect = true,
+    detect = false,
 
     ["debuff_options"] = {},
     ["detected_debuff"] = {},
