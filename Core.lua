@@ -566,39 +566,6 @@ function GridStatusRaidDebuff:ScanUnit(event, unit, updatedAuras)
                                 self:DebuffLocale(realzone, name, spellid, 5, 5, true, true)
                                 if not self.db.profile.detected_debuff[realzone] then self.db.profile.detected_debuff[realzone] = {} end
                                 if not self.db.profile.detected_debuff[realzone][name] then self.db.profile.detected_debuff[realzone][name] = spellid end
-                                if UnitName("boss1") and
-                                (
-                                    sourceName == UnitName("boss1")
-                                    or sourceName == UnitName("boss2")
-                                    or sourceName == UnitName("boss3")
-                                    or sourceName == UnitName("boss4")
-                                    or sourceName == UnitName("boss5")
-                                    or sourceName == UnitName("boss6")
-                                    or sourceName == UnitName("boss7")
-                                    or sourceName == UnitName("boss8")
-                                ) then
-                                    if not self.db.profile.doadinspecial then self.db.profile.doadinspecial = {} end
-                                    if not self.db.profile.doadinspecial.detected_debuff then self.db.profile.doadinspecial.detected_debuff = {} end
-                                    if not self.db.profile.doadinspecial.detected_debuff[realzone] then self.db.profile.doadinspecial.detected_debuff[realzone] = {} end
-                                    if not self.db.profile.doadinspecial.detected_debuff[realzone][UnitName("boss1")] then self.db.profile.doadinspecial.detected_debuff[realzone][UnitName("boss1")] = {} end
-                                    if not self.db.profile.doadinspecial.detected_debuff[realzone][UnitName("boss1")][name] then self.db.profile.doadinspecial.detected_debuff[realzone][UnitName("boss1")][name] = spellid end
-                                end
-                                if not UnitName("boss1") or
-                                (
-                                    sourceName ~= UnitName("boss1")
-                                    and sourceName ~= UnitName("boss2")
-                                    and sourceName ~= UnitName("boss3")
-                                    and sourceName ~= UnitName("boss4")
-                                    and sourceName ~= UnitName("boss5")
-                                    and sourceName ~= UnitName("boss6")
-                                    and sourceName ~= UnitName("boss7")
-                                    and sourceName ~= UnitName("boss8")
-                                ) then
-                                    if not self.db.profile.doadinspecial then self.db.profile.doadinspecial = {} end
-                                    if not self.db.profile.doadinspecial.detected_debuff then self.db.profile.doadinspecial.detected_debuff = {} end
-                                    if not self.db.profile.doadinspecial.detected_debuff[realzone] then self.db.profile.doadinspecial.detected_debuff[realzone] = {} end
-                                    if not self.db.profile.doadinspecial.detected_debuff[realzone][name] then self.db.profile.doadinspecial.detected_debuff[realzone][name] = spellid end
-                                end
                                 self:LoadZoneDebuff(realzone, name)
                             end
                         end
