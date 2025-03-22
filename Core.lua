@@ -448,10 +448,6 @@ function GridStatusRaidDebuff:ScanUnit(event, unit, updatedAuras)
                 if v.spellId == 376788 then
                     v.name = "Echo: Dream Breath"
                 end
-                if (v.spellId == 446403) or (v.name == "Sacrificial Flame") then
-                    print("found Sacrificial Flame")
-                    DevTools_Dump(v)
-                end
                 --if buff_names[v.name] or player_buff_names[v.name] or debuff_names[v.name] or player_debuff_names[v.name] or debuff_types[v.dispelName] then
                     unitAuras[guid][v.auraInstanceID] = v
                 --end
@@ -466,16 +462,14 @@ function GridStatusRaidDebuff:ScanUnit(event, unit, updatedAuras)
                 if aura.spellId == 376788 then
                     aura.name = "Echo: Dream Breath"
                 end
-                if (aura.spellId == 446403) or (aura.name == "Sacrificial Flame")  then
-                    print("found Sacrificial Flame")
-                    DevTools_Dump(aura)
-                end
+                if aura.isHarmful then
                 --if buff_names[aura.name] or player_buff_names[aura.name] or debuff_names[aura.name] or player_debuff_names[aura.name] or debuff_types[aura.dispelName] then
                     if not unitAuras[guid] then
                         unitAuras[guid] = {}
                     end
                     unitAuras[guid][aura.auraInstanceID] = aura
                 --end
+                end
            end
         end
 
@@ -488,14 +482,12 @@ function GridStatusRaidDebuff:ScanUnit(event, unit, updatedAuras)
                 if auraTable and auraTable.spellId == 376788 then
                     auraTable.name = "Echo: Dream Breath"
                 end
-                if (auraTable and auraTable.spellId == 446403) or (auraTable and auraTable.name == "Sacrificial Flame") then
-                    print("found Sacrificial Flame")
-                    DevTools_Dump(auraTable)
-                end
                 if not unitAuras[guid] then
                     unitAuras[guid] = {}
                 end
-                unitAuras[guid][auraInstanceID] = auraTable
+                if auraTable and auraTable.isHarmful then
+                    unitAuras[guid][auraInstanceID] = auraTable
+                end
                 --if auraTable then
                 --    --if buff_names[auraTable.name] or player_buff_names[auraTable.name] or debuff_names[auraTable.name] or player_debuff_names[auraTable.name] or debuff_types[auraTable.dispelName] then
                 --        if not unitAuras[guid] then
