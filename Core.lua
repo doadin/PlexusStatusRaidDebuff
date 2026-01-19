@@ -751,7 +751,8 @@ function GridStatusRaidDebuff:DebuffLocale(zone, first, second, icon_priority, c
 end
 
 function GridStatusRaidDebuff:DebuffId(zoneid, first, second, icon_priority, color_priority, timer, stackable, color, default_disable, noicon)
-    local zone = C_Map.GetMapInfo(zoneid).name
+    local info = zoneid and C_Map.GetMapInfo(zoneid)
+    local zone = info and info.name
 
     if (zone) then
         self:DebuffLocale(zone, first, second, icon_priority, color_priority, timer, stackable, color, default_disable, noicon)
@@ -785,7 +786,8 @@ function GridStatusRaidDebuff:BossNameLocale(zone, order, en_boss)
 end
 
 function GridStatusRaidDebuff:BossNameId(zoneid, order, en_boss)
-    local zone = C_Map.GetMapInfo(zoneid).name
+    local info = zoneid and C_Map.GetMapInfo(zoneid)
+    local zone = info and info.name
 
     if (zone) then
         self:BossNameLocale(zone, order, en_boss)
