@@ -391,7 +391,7 @@ function GridStatusRaidDebuff:ScanUnit(event, unit, updatedAuras)
     if not PlexusRoster:IsGUIDInGroup(guid) then return end
 
     if Plexus:IsRetailWow() then
-        local filter = "HARMFUL"
+        local filter = "HARMFUL|IMPORTANT"
         local result = C_UnitAuras.GetUnitAuras(unit, filter , 1 , Enum.UnitAuraSortRule.ExpirationOnly , Enum.UnitAuraSortDirection.Normal)
         local dur = result and result[1] and C_UnitAuras.GetAuraDuration(unit, result[1].auraInstanceID) or 0
         --DevTools_Dump(result, result[1].icon)
