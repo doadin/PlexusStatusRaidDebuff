@@ -16,6 +16,9 @@ local L = LibStub("AceLocale-3.0"):GetLocale("GridStatusRaidDebuff")
 --	local
 ---------------------------------------------------------
 local Plexus = _G.Plexus
+if Plexus:IsRetailWow() then
+    return
+end
 local realzone, detectStatus, zonetype
 local db, myClass, myDispellable
 local debuff_list = {}
