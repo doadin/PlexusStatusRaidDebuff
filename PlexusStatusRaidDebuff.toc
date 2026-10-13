@@ -28,5 +28,5 @@ Libs\LibBabble-Boss-3.0\lib.xml
 
 Locale\Locale.xml
 
-Core.lua
+#Core.lua
 
